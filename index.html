@@ -1,0 +1,17 @@
+<html>
+<head></head>
+<body>
+<div>
+    <input id="room" placeholder="请输入房间号"/>
+    <input id="user" placeholder="请输入用户名"/>
+    <button onclick="gotochat()">进入</button>
+</div>
+<script type="text/javascript">
+    function gotochat() {
+        var room = document.getElementById("room");
+        var user = document.getElementById("user");
+        window.location = "/chat.html?room=" + room.innerText + "&user=" + user.innerText;
+    }
+</script>
+</body>
+</html>
