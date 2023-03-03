@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"os"
 	"sync"
 	"time"
 )
@@ -16,13 +17,26 @@ func main()  {
 	chats = map[string][]string{}
 	r := gin.New()
 	r.GET("/", index)
+	r.GET("/index.html", index)
+	r.GET("/chat.html", chatHtml)
 	r.GET("/chat", chat)
 	r.GET("/send", send)
 	r.Run(":7070")
 }
 
-func index(c *gin.Context) {
+func chatHtml(c *gin.Context) {
+	content, _ := os.ReadFile("./chat.html")
+	room := c.Query("room")
+	user := c.Query("user")
+	kv := map[string]*string{}
+	kv["room"] = &room
+	kv["user"] = &user
+	c.Writer.Write(templateFill(content, kv))
+}
 
+func index(c *gin.Context) {
+	content, _ := os.ReadFile("./index.html")
+	c.Writer.Write(content)
 }
 
 func chat(c *gin.Context) {
@@ -60,7 +74,7 @@ func send(c *gin.Context) {
 
 	createChatIfNotExists(roomNumber)
 
-	addContent(roomNumber, fmt.Sprintf("%s %s: %s", time.Now().Format("01-02-2006 15:04:05"), userNumber, content))
+	addContent(roomNumber, fmt.Sprintf("%s %s: %s</br>", time.Now().Format("01-02-2006 15:04:05"), userNumber, content))
 
 	c.Writer.WriteString("发送成功")
 }
@@ -92,4 +106,29 @@ func isEmpty(s string) bool {
 		return true
 	}
 	return false
+}
+
+func templateFill(content []byte, kv map[string]*string) []byte {
+	result := make([]byte, 0, 2 * len(content))
+	for i := 0 ; i < len(content); i++ {
+		if (i + 1 < len(content) && content[i] == '{' && content[i + 1] == '{') {
+			var match []byte
+			j := i + 2
+			for ; j + 1 < len(content); j++ {
+				if (content[j] == '}' && content[j + 1] == '}') {
+					match = content[i + 2 : j]
+					break
+				}
+			}
+			if (match != nil && kv[string(match)] != nil) {
+				for _, o := range []byte(*kv[string(match)]) {
+					result = append(result, o)
+				}
+			}
+			i = j + 1
+		} else {
+			result = append(result, content[i])
+		}
+	}
+	return result
 }

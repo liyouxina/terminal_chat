@@ -6,12 +6,28 @@
             <textarea id="send"></textarea>
         </div>
         <script type="text/javascript">
+            var chatContent = document.getElementById("content")
+            var sendText = document.getElementById("send")
+            function refreshChat() {
+                var httpRequest = new XMLHttpRequest();
+                httpRequest.open('GET', "http://" + window.location.host + "/chat?room={{room}}", true);
+                httpRequest.send();
+                httpRequest.onreadystatechange = function () {
+                    if (httpRequest.readyState === 4 && httpRequest.status === 200) {
+                        chatContent.innerHTML = httpRequest.responseText
+                    }
+                }
+            }
+            refreshChat()
+            setInterval(refreshChat, 1000)
             window.onkeydown = function (e) {
                 if (e.keyCode == 13) {
                     var httpRequest = new XMLHttpRequest();
-                    httpRequest.open('GET', "http://" + window.location.host + "/send", true);
+                    httpRequest.open('GET', "http://" + window.location.host + "/send?room={{room}}&user={{user}}&content=" + sendText.value, true);
+                    httpRequest.send();
+                    sendText.value = ""
+                    refreshChat()
                 }
-                console.log()
             }
         </script>
     </body>
