@@ -15,6 +15,12 @@ var createChatLock sync.Mutex
 var sendMsgLock sync.Mutex
 
 func main() {
+	defer func() {
+		err := recover()
+		if err != nil {
+			logrus.Infof("unexpected shutdown %v", err)
+		}
+	}()
 	chats = map[string][]string{}
 	r := gin.New()
 	r.GET("/", index)
