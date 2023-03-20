@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 	"os"
 	"sync"
 	"time"
@@ -13,7 +14,7 @@ var chats map[string][]string
 var createChatLock sync.Mutex
 var sendMsgLock sync.Mutex
 
-func main()  {
+func main() {
 	chats = map[string][]string{}
 	r := gin.New()
 	r.GET("/", index)
@@ -25,6 +26,7 @@ func main()  {
 }
 
 func chatHtml(c *gin.Context) {
+	logrus.Infof("chatHtml")
 	content, _ := os.ReadFile("./chat.html")
 	room := c.Query("room")
 	user := c.Query("user")
@@ -35,11 +37,13 @@ func chatHtml(c *gin.Context) {
 }
 
 func index(c *gin.Context) {
+	logrus.Infof("index")
 	content, _ := os.ReadFile("./index.html")
 	c.Writer.Write(content)
 }
 
 func chat(c *gin.Context) {
+	logrus.Infof("chat")
 	roomNumber := c.Query("room")
 	if isEmpty(roomNumber) {
 		c.Writer.WriteString("没有这个房间号")
@@ -56,6 +60,7 @@ func chat(c *gin.Context) {
 }
 
 func send(c *gin.Context) {
+	logrus.Infof("send")
 	roomNumber := c.Query("room")
 	if isEmpty(roomNumber) {
 		c.Writer.WriteString("没有这个房间号")
@@ -109,18 +114,18 @@ func isEmpty(s string) bool {
 }
 
 func templateFill(content []byte, kv map[string]*string) []byte {
-	result := make([]byte, 0, 2 * len(content))
-	for i := 0 ; i < len(content); i++ {
-		if (i + 1 < len(content) && content[i] == '{' && content[i + 1] == '{') {
+	result := make([]byte, 0, 2*len(content))
+	for i := 0; i < len(content); i++ {
+		if i+1 < len(content) && content[i] == '{' && content[i+1] == '{' {
 			var match []byte
 			j := i + 2
-			for ; j + 1 < len(content); j++ {
-				if (content[j] == '}' && content[j + 1] == '}') {
-					match = content[i + 2 : j]
+			for ; j+1 < len(content); j++ {
+				if content[j] == '}' && content[j+1] == '}' {
+					match = content[i+2 : j]
 					break
 				}
 			}
-			if (match != nil && kv[string(match)] != nil) {
+			if match != nil && kv[string(match)] != nil {
 				for _, o := range []byte(*kv[string(match)]) {
 					result = append(result, o)
 				}
